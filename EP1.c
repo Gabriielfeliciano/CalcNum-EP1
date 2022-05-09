@@ -13,6 +13,7 @@ MARINA BRASIL
 
 #define EPSILON 0.00000001 // isso é igual a 10 elevado a -8
 
+// Declaracao das funcoes a serem utilizadas na main
 void conversao(double num);
 void sistemaLinear();
 void equacaoAlgebrica();
@@ -25,6 +26,7 @@ int main()
     char comando = 0;
     double num_conv = 0.0;
 
+    // Imprime o menu com as opcoes de funcoes ate ser selecionado "F - Finalizar"
     do
     {
         printf("\n\n==== MENU ====\n");
@@ -39,27 +41,18 @@ int main()
             scanf("%lf", &num_conv);
             // printf("%lf\n", num_conv);
             conversao(num_conv);
-
-            /*
-            !!!ATENCAO!!!
-            PRECISA MELHORAR A PRECISAO DO SCANF
-            NÃO ESTA PEGANDO CASAS DECIMAIS DEPOIS DA 6ª
-            */
-
             break;
 
         case 'S':
-            printf("vc escolheu sistema linear");
             sistemaLinear();
             break;
 
         case 'E':
-            printf("vc escolheu equacao algebrica");
             equacaoAlgebrica();
             break;
 
         case 'F':
-            printf("vc escolheu finalizar a aplicacao");
+            printf("Voce escolheu finalizar a aplicacao.");
             break;
 
         default:
@@ -69,27 +62,29 @@ int main()
     } while (comando != 'F');
 }
 
+
+// Implementacao das funcoes declaradas no inicio
+
 void conversao(double num)
 {
-
     // --------------------------- CONVERSAO BINARIA --------------------------------//
 
     // vetor para salvar o numero binario
     int numBinarioInt[32];  // parte inteira do numero binario
     int numBinarioFrac[32]; // parte fracionaria do numero binario
 
-    char isSigned = 0;
+    char isSigned = 0; // variavel que armazena a informacao do sinal do input
 
-    if (num < 0.0)
+    // testa se o input é negativo, salva a informação e manipula o valor para conversao
+    if (num < 0.0) 
     {
         isSigned = 1;
         num = -num;
     }
 
+    // separa o input recebido na parte inteira (n) e fracionaria (m)
     int n = (int)num;
-    // printf("%d", n);
     double m = num - n;
-    // printf("%lf", m);
 
     // conversao da parte inteira
     int i = 0; // armazena qtd de casas da parte inteira
@@ -103,9 +98,9 @@ void conversao(double num)
     // imprime a parte inteira em ordem inversa
     printf("Binario: ");
     if (isSigned)
-        printf("-");
+        printf("-"); // imprime o sinal negativo se a variavel isSigned for true
     for (int j = i - 1; j >= 0; j--)
-        printf("%d", numBinarioInt[j]);
+        printf("%d", numBinarioInt[j]); // imprime cada digito salvo no vetor
 
     // testa se existe parte fracionaria antes de fazer a conversao
     int k = 0; // armazena qtd de casas da parte fracionaria
@@ -118,10 +113,10 @@ void conversao(double num)
             m = m - (int)m;                    // salva somente a parte fracionaria apos multiplicacao
             k++;                               // aumenta contador para impressao ao final
         };
-        printf(".");
         // imprime a parte fracionaria em ordem direta
+        printf(".");
         for (int l = 0; l < k && l < 20; l++)
-            printf("%d", numBinarioFrac[l]);
+            printf("%d", numBinarioFrac[l]); // imprime cada digito salvo no vetor
     };
 
     // -------------------------- CONVERSAO OCTAL -----------------------------------//
@@ -133,32 +128,38 @@ void conversao(double num)
     double div_int = ceil(i / 3.0);  // encontra quantos conjuntos de 3 existem no inteiro
     double div_frac = ceil(k / 3.0); // encontra quantos conjuntos de 3 existem na fracao
 
+    // separa o input recebido na parte inteira (n) e fracionaria (m)
     n = (int)num;
     m = num - n;
 
-    int j = 0;
+    // pega o valor inteiro de tres em tres e converte em octal
+    int j = 0; // armazena qtd de casas da parte inteira
     while (n)
     {
-        numOctalInt[j++] = (n & 0b111);
-        n >>= 3;
+        numOctalInt[j++] = (n & 0b111); // salva a informação de 3 bits significativos do inteiro
+        n >>= 3; // desloca a parte inteira em 3 posicoes
     }
+
+    // imprime a parte inteira em ordem inversa
     printf("\nOctal: ");
     if (isSigned)
-        printf("-");
+        printf("-"); // imprime o sinal negativo se a variavel isSigned for true
     for (j = div_int - 1; j >= 0; j--)
-        printf("%d", numOctalInt[j]);
+        printf("%d", numOctalInt[j]);  // imprime cada digito salvo no vetor
 
-    j = 0;
+    j = 0; // armazena qtd de casas da parte fracionaria
+    // inicia conversao da parte fracionaria se m nao for 0 e tiver ate 20 casas fracionarias
     while (m && j < 20)
     {
-        m *= 8;
-        numOctalFrac[j++] = (int)m;
-        m = m - (int)m;
+        m *= 8; // multiplica fracionario por 8 para transformar temporariamente em inteiro
+        numOctalFrac[j++] = (int)m; // salva parte "inteira" da conversao
+        m = m - (int)m; // salva a parte fracionaria restante para conversao
     }
-    printf(".");
 
+    // imprime a parte fracionaria em ordem direta
+    printf(".");
     for (j = 0; j < div_frac; j++)
-        printf("%d", numOctalFrac[j]);
+        printf("%d", numOctalFrac[j]); // imprime cada digito salvo no vetor
 
     // ----------------------- CONVERSAO HEXADECIMAL --------------------------------//
 
@@ -169,32 +170,38 @@ void conversao(double num)
     div_int = ceil(i / 4.0);  // encontra quantos conjuntos de 4 existem no inteiro
     div_frac = ceil(k / 4.0); // encontra quantos conjuntos de 4 existem na fracao
 
+    // separa o input recebido na parte inteira (n) e fracionaria (m)
     n = (int)num;
     m = num - n;
 
+    // pega o valor inteiro de quatro em quatro e converte em hexadecimal
     int q = 0;
     while (n)
     {
-        numHexaInt[q++] = (n & 0b1111);
-        n >>= 4;
+        numHexaInt[q++] = (n & 0b1111); // salva a informação de 4 bits significativos do inteiro
+        n >>= 4; // desloca a parte inteira em 4 posicoes
     }
+
+    // imprime a parte inteira em ordem inversa
     printf("\nHexadecimal: ");
     if (isSigned)
-        printf("-");
+        printf("-"); // imprime o sinal negativo se a variavel isSigned for true
     for (q = div_int - 1; q >= 0; q--)
-        printf("%X", numHexaInt[q]);
+        printf("%X", numHexaInt[q]); // imprime cada digito salvo no vetor
 
-    q = 0;
+    q = 0; // armazena qtd de casas da parte fracionaria
+    // inicia conversao da parte fracionaria se m nao for 0 e tiver ate 20 casas fracionarias
     while (m && q < 20)
     {
-        m *= 16;
-        numHexaFrac[q++] = (int)m;
-        m = m - (int)m;
+        m *= 16; // multiplica fracionario por 16 para transformar temporariamente em inteiro
+        numHexaFrac[q++] = (int)m; // salva parte "inteira" da conversao
+        m = m - (int)m; // salva a parte fracionaria restante para conversao
     }
-    printf(".");
 
+    // imprime a parte fracionaria em ordem direta
+    printf(".");
     for (q = 0; q < div_frac; q++)
-        printf("%X", numHexaFrac[q]);
+        printf("%X", numHexaFrac[q]); // imprime cada digito salvo no vetor
 };
 
 void trocas(double *a, double *b)
