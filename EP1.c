@@ -14,21 +14,22 @@ MARINA BRASIL
 
 typedef struct
 {
-  int tamMatriz; // NUMERO DE LINHAS E VARIAVEIS
-  double **matrizRecebida;
+    int tamMatriz; // NUMERO DE LINHAS E VARIAVEIS
+    double **matrizRecebida;
 } MatrizGS;
 
+// Funcao auxiliares
+void trocas(double *a, double *b);
 
 // Declaracao das funcoes a serem utilizadas na main
 void conversao(double num);
-void sistemaLinear(void);
 void equacaoAlgebrica();
-void metodoNewton(int grauEquacao, double *coeficientes);
-void trocas(double *a, double *b);
+void teoremaLagrange(double n, double an, double *coeficientes, double *limites, int contadorLimites);
+void metodoNewton(double *limites, int grauEquacao, double *coeficientes);
+void sistemaLinear();
 
 int main()
 {
-
     char comando = 0;
     double num_conv = 0.0;
 
@@ -45,7 +46,6 @@ int main()
         case 'C':
             printf("insira o numero decimal para conversao: ");
             scanf("%lf", &num_conv);
-            // printf("%lf\n", num_conv);
             conversao(num_conv);
             break;
 
@@ -66,8 +66,7 @@ int main()
             break;
         }
     } while (comando != 'F');
-}
-
+} // Finalizando a Main
 
 // Implementacao das funcoes declaradas no inicio
 
@@ -82,7 +81,7 @@ void conversao(double num)
     char isSigned = 0; // variavel que armazena a informacao do sinal do input
 
     // testa se o input é negativo, salva a informação e manipula o valor para conversao
-    if (num < 0.0) 
+    if (num < 0.0)
     {
         isSigned = 1;
         num = -num;
@@ -143,7 +142,7 @@ void conversao(double num)
     while (n)
     {
         numOctalInt[j++] = (n & 0b111); // salva a informação de 3 bits significativos do inteiro
-        n >>= 3; // desloca a parte inteira em 3 posicoes
+        n >>= 3;                        // desloca a parte inteira em 3 posicoes
     }
 
     // imprime a parte inteira em ordem inversa
@@ -151,15 +150,15 @@ void conversao(double num)
     if (isSigned)
         printf("-"); // imprime o sinal negativo se a variavel isSigned for true
     for (j = div_int - 1; j >= 0; j--)
-        printf("%d", numOctalInt[j]);  // imprime cada digito salvo no vetor
+        printf("%d", numOctalInt[j]); // imprime cada digito salvo no vetor
 
     j = 0; // armazena qtd de casas da parte fracionaria
     // inicia conversao da parte fracionaria se m nao for 0 e tiver ate 20 casas fracionarias
     while (m && j < 20)
     {
-        m *= 8; // multiplica fracionario por 8 para transformar temporariamente em inteiro
+        m *= 8;                     // multiplica fracionario por 8 para transformar temporariamente em inteiro
         numOctalFrac[j++] = (int)m; // salva parte "inteira" da conversao
-        m = m - (int)m; // salva a parte fracionaria restante para conversao
+        m = m - (int)m;             // salva a parte fracionaria restante para conversao
     }
 
     // imprime a parte fracionaria em ordem direta
@@ -185,7 +184,7 @@ void conversao(double num)
     while (n)
     {
         numHexaInt[q++] = (n & 0b1111); // salva a informação de 4 bits significativos do inteiro
-        n >>= 4; // desloca a parte inteira em 4 posicoes
+        n >>= 4;                        // desloca a parte inteira em 4 posicoes
     }
 
     // imprime a parte inteira em ordem inversa
@@ -199,16 +198,16 @@ void conversao(double num)
     // inicia conversao da parte fracionaria se m nao for 0 e tiver ate 20 casas fracionarias
     while (m && q < 20)
     {
-        m *= 16; // multiplica fracionario por 16 para transformar temporariamente em inteiro
+        m *= 16;                   // multiplica fracionario por 16 para transformar temporariamente em inteiro
         numHexaFrac[q++] = (int)m; // salva parte "inteira" da conversao
-        m = m - (int)m; // salva a parte fracionaria restante para conversao
+        m = m - (int)m;            // salva a parte fracionaria restante para conversao
     }
 
     // imprime a parte fracionaria em ordem direta
     printf(".");
     for (q = 0; q < div_frac; q++)
         printf("%X", numHexaFrac[q]); // imprime cada digito salvo no vetor
-};
+};                                    // Acabou a função: conversao
 
 void trocas(double *a, double *b)
 {
@@ -221,7 +220,7 @@ void trocas(double *a, double *b)
     aux = *a;
     *a = *b;
     *b = aux;
-} // Acabou a função: trocas
+}; // Acabou a função: trocas
 
 int verificaDigitado(int n, int grauEquacao)
 {
@@ -249,8 +248,8 @@ void equacaoAlgebrica()
     0 Vai dar erro caso x[n] <= 0 ou x[0]
     */
 
-    int grauEquacao, i, contLimites = 0, novoValor;
-    double *coeficientes;
+    int grauEquacao, i, contadorLimites = 0, novoValor;
+    double *coeficientes, limites[4];
 
     printf("\nDigite o grau da equacao: ");
     scanf("%d%*c", &grauEquacao);
@@ -279,15 +278,99 @@ void equacaoAlgebrica()
             coeficientes[i] = novoValor;
         }
     }
+
+    // Calcula L para limite superior das raizes positivas.
+    teoremaLagrange(grauEquacao, coeficientes[0], coeficientes, limites, contadorLimites);
+    contadorLimites++;
+
+    for (i = 0; i < (grauEquacao + 1) / 2; i++)
+    {
+        // Invertemos a ordem dos coeficientes para obter X^n . p(1/x)
+        trocas(&coeficientes[i], &coeficientes[grauEquacao - i]);
+    }
+
+    // Calcula L1 para o Limite inferior das raizes positivas.
+    teoremaLagrange(grauEquacao, coeficientes[0], coeficientes, limites, contadorLimites);
+    contadorLimites++;
+
+    for (i = 0; i <= grauEquacao; i++)
+    {
+        //	Trocamos o sinal dos coeficientes de indice impar para obter X^n . p(-1/x)
+        if ((grauEquacao - i) % 2)
+            coeficientes[i] *= -1;
+    }
+
+    // Calcula L3 para o limite superior das raizes negativas
+    teoremaLagrange(grauEquacao, coeficientes[0], coeficientes, limites, contadorLimites);
+    contadorLimites++;
+
+    for (i = 0; i < (grauEquacao + 1) / 2; i++)
+    {
+        //	Invertemos a ordem dos coeficientes para obter p(-x)
+        trocas(&coeficientes[i], &coeficientes[grauEquacao - i]);
+    }
+
+    // Calcula L2 para o limite inferior das raizes negativas
+    teoremaLagrange(grauEquacao, coeficientes[0], coeficientes, limites, contadorLimites);
+
+    printf("\nLimites das raizes positivas: ");
+    printf("\n%lf <= x+ <= %lf", 1 / limites[1], limites[0]);
+
+    printf("\nLimites das raizes negativas: ");
+    printf("\n%lf <= x- <= %lf", -limites[3], -1 / limites[2]);
+
     // Chamada do metodo de Newton
-    metodoNewton(grauEquacao, coeficientes);
+    metodoNewton(limites, grauEquacao, coeficientes);
 
     // Desalocar memória
     free(coeficientes);
 
 } // Acabou a função: equacaoAlgebrica
 
-void metodoNewton(int grauEquacao, double *coeficientes)
+void teoremaLagrange(double n, double an, double *coeficientes, double *limites, int contadorLimites)
+{
+    /*
+    No Teorema de Lagrange vamos pegar um polinomio e encontrar seus limites
+
+    n = grau do polinomio
+    an = coeficiente de indice n.
+    */
+
+    double k = 0, b = 0;
+    /*
+    k = maior indice dos coeficientes negativos do polinomio
+    b = modulo do menor coeficiente negativo
+    */
+    int i;
+
+    if (an < 0)
+    {
+        // Quando temos um an negativo, teriamos uma raiz 0
+        // Sendo assim vamos mutiplicar o f(x) por -1
+        for (i = 0; i <= n; i++)
+            coeficientes[i] *= -1;
+        an *= -1;
+    }
+
+    for (i = 0; i <= n; i++)
+    {
+        if (coeficientes[i] < 0 && k == 0)
+        {
+            k = n - i;
+            if (coeficientes[i] < 0 && coeficientes[i] < b)
+            {
+                b = coeficientes[i];
+            }
+        }
+    }
+
+    // guarda |b|
+    b = fabs(b);
+    limites[contadorLimites] = 1 + pow(b / an, 1.0 / (n - k));
+
+} // Acabou a função: teoremaLagrange
+
+void metodoNewton(double *limites, int grauEquacao, double *coeficientes)
 {
     /*
     Função de metodoNewton começa recebendo o resultado do f(x) e f'(x).
@@ -296,7 +379,7 @@ void metodoNewton(int grauEquacao, double *coeficientes)
     Depois imprimimos a quantidade de interação e a raiz aproximada
     */
 
-    double aux, *dfx, x = 10, fx[2];
+    double aux, *dfx, x = limites[0], fx[2];
     // x: aproximacao resultante (limite superior)
     int contaIteracoes, i, z;
     // fx é o polinomio e a derivada
@@ -349,166 +432,164 @@ void metodoNewton(int grauEquacao, double *coeficientes)
 
 double **alocacaoDeMatriz(int linha, int coluna)
 {
-  // Alocação dinâmica da matriz usando o "malloc()"
-  int i, j;
-  double **matrizCRIADA;
-  matrizCRIADA = malloc(sizeof(double *) * linha);
-  if (matrizCRIADA == NULL)
-    return NULL;
-  for (i = 0; i < linha; i++)
-  {
-    matrizCRIADA[i] = malloc(sizeof(double) * coluna);
-    if (matrizCRIADA[i] == NULL)
+    // Alocação dinâmica da matriz usando o "malloc()"
+    int i, j;
+    double **matrizCRIADA;
+    matrizCRIADA = malloc(sizeof(double *) * linha);
+    if (matrizCRIADA == NULL)
+        return NULL;
+    for (i = 0; i < linha; i++)
     {
-      for (j = 0; j < i; j++)
-        free(matrizCRIADA[j]);
-      free(matrizCRIADA);
-      return NULL;
+        matrizCRIADA[i] = malloc(sizeof(double) * coluna);
+        if (matrizCRIADA[i] == NULL)
+        {
+            for (j = 0; j < i; j++)
+                free(matrizCRIADA[j]);
+            free(matrizCRIADA);
+            return NULL;
+        }
     }
-  }
-  return matrizCRIADA;
-}
-
-// FUNÇÃO QUE ABRE UM ARQUIVO SEGUNDO O DIRETÓRIO DADO PELO USUÁRIO E LER ESSE ARQUIVO, PASSANDO PARA UMA MATRIZ DE TAMANHO ESPECIFICADO NO ARQUIVO
+    return matrizCRIADA;
+} // Acabou a função: alocacaoDeMatriz
 
 MatrizGS *Leitura_Abertura_Arquivo()
 {
-  char nomeArquivo[20];
-  int i, j, tam;
-  double **maatriz;
+    // FUNÇÃO QUE ABRE UM ARQUIVO SEGUNDO O DIRETÓRIO DADO PELO USUÁRIO E LER ESSE ARQUIVO, PASSANDO PARA UMA MATRIZ DE TAMANHO ESPECIFICADO NO ARQUIVO
+    char nomeArquivo[20];
+    int i, j, tam;
+    double **maatriz;
 
-  FILE *arquivo;
+    FILE *arquivo;
 
-  printf("Digite o nome do arquivo: ");
-  scanf(" %s", nomeArquivo);
-  arquivo = fopen(nomeArquivo, "r"); // ABRINDO O ARQUIVO DADO COM O "fopen" E LENDO ELE COM O PARÂMETRO "r" de READ
+    printf("Digite o nome do arquivo: ");
+    scanf(" %s", nomeArquivo);
+    arquivo = fopen(nomeArquivo, "r"); // ABRINDO O ARQUIVO DADO COM O "fopen" E LENDO ELE COM O PARÂMETRO "r" de READ
 
-  if (arquivo == NULL)
-  { // FUNÇÃO PARA CASOS ONDE O ARQUIVO RETORNA NULO
-    printf("O arquivo nao existe.\n");
-    return NULL;
-  }
-  fscanf(arquivo, " %d", &tam); // "fscanf()" TRABALHA COM A LEITURA DE ENTRADA FORMATADA (SEMELHANTE AO "scanf()"). NESTE CASO ESTÁ RECEBENDO O NÚMERO DE LINHAS QUE O SISTEMA LINEAR POSSUI
-
-  maatriz = alocacaoDeMatriz(tam, tam + 1); // CHAMA A FUNÇÃO PARA CRIAR UMA MATRIZ QUE TENHA N LINHAS E N+1 COLUNAS
-
-  for (i = 0; i < tam; i++)
-  { // GUARDA DENTRO DA MATRIZ CRIADA OS VALORES PASSADOS DENTRO DO ARQUIVO SEGUINDO A ORDEM DAS LINHAS E COLUNAS
-    for (j = 0; j < tam + 1; j++)
-    {
-      fscanf(arquivo, " %lf", &maatriz[i][j]);
+    if (arquivo == NULL)
+    { // FUNÇÃO PARA CASOS ONDE O ARQUIVO RETORNA NULO
+        printf("O arquivo nao existe.\n");
+        return NULL;
     }
-  }
-  fclose(arquivo); // FUNÇÃO QUE FECHA O ARQUIVO
+    fscanf(arquivo, " %d", &tam); // "fscanf()" TRABALHA COM A LEITURA DE ENTRADA FORMATADA (SEMELHANTE AO "scanf()"). NESTE CASO ESTÁ RECEBENDO O NÚMERO DE LINHAS QUE O SISTEMA LINEAR POSSUI
 
-  MatrizGS *Matriz_SL = (MatrizGS *)malloc(sizeof(MatrizGS)); //"malloc" É A FUNÇÃO CENTRAL DA ALOCAÇÃO DINAMICA DE MEMORIA, DEVEMOS CHAMAR O "sizeof" E RECUPERAR A QUANTIDADE DE MEMÓRIA UTILIZADA NO ARMAZENAMENTO.
+    maatriz = alocacaoDeMatriz(tam, tam + 1); // CHAMA A FUNÇÃO PARA CRIAR UMA MATRIZ QUE TENHA N LINHAS E N+1 COLUNAS
 
-  if (Matriz_SL == NULL)
-    return NULL;
-  Matriz_SL->matrizRecebida = maatriz;
-  Matriz_SL->tamMatriz = tam;
+    for (i = 0; i < tam; i++)
+    { // GUARDA DENTRO DA MATRIZ CRIADA OS VALORES PASSADOS DENTRO DO ARQUIVO SEGUINDO A ORDEM DAS LINHAS E COLUNAS
+        for (j = 0; j < tam + 1; j++)
+        {
+            fscanf(arquivo, " %lf", &maatriz[i][j]);
+        }
+    }
+    fclose(arquivo); // FUNÇÃO QUE FECHA O ARQUIVO
 
-  return Matriz_SL;
-}
+    MatrizGS *Matriz_SL = (MatrizGS *)malloc(sizeof(MatrizGS)); //"malloc" É A FUNÇÃO CENTRAL DA ALOCAÇÃO DINAMICA DE MEMORIA, DEVEMOS CHAMAR O "sizeof" E RECUPERAR A QUANTIDADE DE MEMÓRIA UTILIZADA NO ARMAZENAMENTO.
 
-// FUNÇÃO QUE VERIFICA SE A MATRIZ DE COEFICIENTES SATISFAZ O CRITÉRIO DAS LINHAS OU O CRITÉRIO DAS COLUNAS.
+    if (Matriz_SL == NULL)
+        return NULL;
+    Matriz_SL->matrizRecebida = maatriz;
+    Matriz_SL->tamMatriz = tam;
+
+    return Matriz_SL;
+}; // Acabou a função: Leitura_Abertura_Arquivo
 
 int VerificacaoDasLinhasEColunas(double **m)
 {
-  int var = 3, i, j;
-  double pivo, Soma_da_linha, Soma_da_Coluna;
+    // FUNÇÃO QUE VERIFICA SE A MATRIZ DE COEFICIENTES SATISFAZ O CRITÉRIO DAS LINHAS OU O CRITÉRIO DAS COLUNAS.
+    int var = 3, i, j;
+    double pivo, Soma_da_linha, Soma_da_Coluna;
 
-  for (i = 0; i < var; i++)
-  {
-    Soma_da_linha = 0.0;
-    Soma_da_Coluna = 0.0;
-    pivo = fabs(m[i][i]); // O pivo é localizado na linha i coluna i de uma determinada matriz, a função "fabs()" retorna o valor absoluto de x.
-
-    for (j = 0; j < var; j++)
+    for (i = 0; i < var; i++)
     {
-      if (i != j)
-      {
+        Soma_da_linha = 0.0;
+        Soma_da_Coluna = 0.0;
+        pivo = fabs(m[i][i]); // O pivo é localizado na linha i coluna i de uma determinada matriz, a função "fabs()" retorna o valor absoluto de x.
 
-        Soma_da_linha = Soma_da_linha + fabs(m[i][j]);
-        Soma_da_Coluna = Soma_da_Coluna + fabs(m[j][i]);
-      }
+        for (j = 0; j < var; j++)
+        {
+            if (i != j)
+            {
 
-      // O critério das linhas e das colunas é atendido quando o pivô é maior ou igual a soma dos elementos da sua linha e coluna
-      if (Soma_da_linha > pivo || Soma_da_Coluna > pivo)
-        return -1;
-    } // DEVOLVE O VALOR 1 PARA BEM CONDICIONADA E -1 PARA MAL CONDICIONADA
-  }
-  return 1;
-}
+                Soma_da_linha = Soma_da_linha + fabs(m[i][j]);
+                Soma_da_Coluna = Soma_da_Coluna + fabs(m[j][i]);
+            }
+
+            // O critério das linhas e das colunas é atendido quando o pivô é maior ou igual a soma dos elementos da sua linha e coluna
+            if (Soma_da_linha > pivo || Soma_da_Coluna > pivo)
+                return -1;
+        } // DEVOLVE O VALOR 1 PARA BEM CONDICIONADA E -1 PARA MAL CONDICIONADA
+    }
+    return 1;
+}; // Acabou a função: VerificacaoDasLinhasEColunas
 
 void sistemaLinear()
 {
-  MatrizGS *Matriz_SL = Leitura_Abertura_Arquivo();
-  // CHAMADA DA FUNÇÃO PARA ABRIR E LER O ARQUIVO
-  if (Matriz_SL == NULL)
-  {
-    printf("Erro na leitura do arquivo.\n");
-    return;
-  }
-  // SE O ARQUIVO FOR NULO A FUNÇÃO RETORNARÁ UMA MENSAGEM DE ERRO
+    MatrizGS *Matriz_SL = Leitura_Abertura_Arquivo();
+    // CHAMADA DA FUNÇÃO PARA ABRIR E LER O ARQUIVO
+    if (Matriz_SL == NULL)
+    {
+        printf("Erro na leitura do arquivo.\n");
+        return;
+    }
+    // SE O ARQUIVO FOR NULO A FUNÇÃO RETORNARÁ UMA MENSAGEM DE ERRO
 
-  double **m = Matriz_SL->matrizRecebida;
+    double **m = Matriz_SL->matrizRecebida;
 
-  // SE A FUNÇÃO DE VERIFICAÇÃO DEVOLVER -1 ELA NÃO SATISFAZ O CRITÉRIO DAS LINHAS E DAS COLUNAS
+    // SE A FUNÇÃO DE VERIFICAÇÃO DEVOLVER -1 ELA NÃO SATISFAZ O CRITÉRIO DAS LINHAS E DAS COLUNAS
 
-  if (VerificacaoDasLinhasEColunas(m) == -1)
-  {
-    printf("\nO sistema linear não satisfaz o critério das linhas nem o critério das colunas.\n");
-    return;
-  }
+    if (VerificacaoDasLinhasEColunas(m) == -1)
+    {
+        printf("\nO sistema linear não satisfaz o critério das linhas nem o critério das colunas.\n");
+        return;
+    }
 
-  double pivo, Elemento_Linha;
-  int i, j, interacoes = 0;
-  int var = Matriz_SL->tamMatriz; // RECEBENDO O VALOR DA PRIMEIRA LINHA DO ARQUIVO, REFERENTE AO NUMERO DE VARIÁVEIS E LINHAS.
+    double pivo, Elemento_Linha;
+    int i, j, interacoes = 0;
+    int var = Matriz_SL->tamMatriz; // RECEBENDO O VALOR DA PRIMEIRA LINHA DO ARQUIVO, REFERENTE AO NUMERO DE VARIÁVEIS E LINHAS.
 
-  double valores_linha_pivo[var], valoresAnteriores[var];
+    double valores_linha_pivo[var], valoresAnteriores[var];
 
-  for (i = 0; i < var; i++)
-  {
-    valores_linha_pivo[i] = 0.0;
-    valoresAnteriores[i] = 0.0;
-  }
-  // EXECUTANDO 1000 iterações
-  int Dif_Minima = 0;
-  while (interacoes < 1000 && Dif_Minima == 0)
-  {
     for (i = 0; i < var; i++)
     {
-      Elemento_Linha = 0.0;
-      pivo = m[i][i]; // PIVO
-      for (j = 0; j < var; j++)
-      {
-        if (i != j)
+        valores_linha_pivo[i] = 0.0;
+        valoresAnteriores[i] = 0.0;
+    }
+    // EXECUTANDO 1000 iterações
+    int Dif_Minima = 0;
+    while (interacoes < 1000 && Dif_Minima == 0)
+    {
+        for (i = 0; i < var; i++)
         {
-          // CALCULANDO O NOVO VALOR DOS ELEMENTOS DA LINHA
-          Elemento_Linha = Elemento_Linha - (valores_linha_pivo[j] * m[i][j]);
+            Elemento_Linha = 0.0;
+            pivo = m[i][i]; // PIVO
+            for (j = 0; j < var; j++)
+            {
+                if (i != j)
+                {
+                    // CALCULANDO O NOVO VALOR DOS ELEMENTOS DA LINHA
+                    Elemento_Linha = Elemento_Linha - (valores_linha_pivo[j] * m[i][j]);
+                }
+            }
+            // CALCULANDO OS VALORES DOS MULTIPLICADORES
+            valores_linha_pivo[i] = (Elemento_Linha + m[i][var]) / pivo;
         }
-      }
-      // CALCULANDO OS VALORES DOS MULTIPLICADORES
-      valores_linha_pivo[i] = (Elemento_Linha + m[i][var]) / pivo;
+
+        Dif_Minima = 1;
+
+        for (i = 0; i < var; i++)
+        {
+            Dif_Minima = (fabs(valoresAnteriores[i] - valores_linha_pivo[i]) < 0.00000001) && (Dif_Minima == 1) ? 1 : 0;
+            valoresAnteriores[i] = valores_linha_pivo[i];
+        }
+        interacoes++;
     }
 
-    Dif_Minima = 1;
-
+    printf("\n\n============RESOLUCAO DO SL METODO DE GAUSS-SEIDEL=============");
+    printf("\n\n-- Numero de iteracoes realizadas: %d\n", interacoes);
+    printf("\n-- Solucao encontrada:\n");
     for (i = 0; i < var; i++)
     {
-      Dif_Minima = (fabs(valoresAnteriores[i] - valores_linha_pivo[i]) < 0.00000001) && (Dif_Minima == 1) ? 1 : 0;
-      valoresAnteriores[i] = valores_linha_pivo[i];
+        printf("x%d: %f; ", i + 1, valores_linha_pivo[i]);
     }
-    interacoes++;
-  }
-
-  printf("\n\n============RESOLUCAO DO SL METODO DE GAUSS-SEIDEL=============");
-  printf("\n\n-- Numero de iteracoes realizadas: %d\n", interacoes);
-  printf("\n-- Solucao encontrada:\n");
-  for (i = 0; i < var; i++)
-  {
-    printf("x%d: %f; ", i + 1, valores_linha_pivo[i]);
-  }
-  printf("\n\n===============================================================\n\n");
-}
+    printf("\n\n===============================================================\n\n");
+}; // Acabou a função: sistemaLinear
